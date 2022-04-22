@@ -1,12 +1,11 @@
-import SaveContext, { SaveData } from "./SaveContext";
-import TestComp from "./TestComp";
+import Header from "./Header";
+import "./css/app.css";
 
-function App() {
+export default function App() {
 	return (
-		<SaveContext.Provider value={SaveData}>
-			<TestComp />
-		</SaveContext.Provider>
-	);
-}
+		<main className="player">
+			<Header trackName={`The Beatles Elanor Rigby`} />
 
-export default App;
+		</main>
+	)
+};

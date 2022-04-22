@@ -1,12 +1,13 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './App';
-import './bootstrap.css';
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+// import App from "./App";
+import "./css/global.css";
+import CustomContainer from "./CustomContainer";
 
 createRoot(
-	document.getElementById('root')
+	document.getElementById("root")
 ).render(
 	<StrictMode>
-		<App />
+		<CustomContainer />
 	</StrictMode>
 );
