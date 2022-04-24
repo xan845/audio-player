@@ -10,5 +10,6 @@
   ],
   "start_url": "https://devnullsans.github.io/audio-player/",
 	"scope": "https://devnullsans.github.io/audio-player/",
+	"display_override": ["fullscreen", "minimal-ui"],
   "display": "standalone"
 }

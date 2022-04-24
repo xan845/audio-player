@@ -50,7 +50,7 @@ p {
 	height: 3rem;
 	display: flex;
 	flex-wrap: nowrap;
-	align-items: center;
+	align-items: baseline;
 }
 
 .songs {
