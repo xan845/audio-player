@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { arrayMove, arrayRemove, List } from "react-movable";
 
 const audio = new Audio();
-// audio.currentTime
-
 
 export default function App() {
 
@@ -29,12 +27,12 @@ export default function App() {
 	};
 
 	const setCurrentTrack = (file, index = 0) => {
+		URL.revokeObjectURL(audio.src);
 		audio.src = file ? URL.createObjectURL(file) : null
 		nowPlaying({ file, index, duration: 0, current: 0 });
 	};
 
 	const setDurations = () => nowPlaying(nP => {
-		URL.revokeObjectURL(audio.src);
 		audio.play();
 		return {
 			...nP,
@@ -51,7 +49,6 @@ export default function App() {
 		audio.addEventListener('canplaythrough', setDurations)
 		audio.addEventListener('timeupdate', updateCurrent);
 		audio.addEventListener('ended', trackEnded)
-
 		return () => {
 			audio.removeEventListener('canplaythrough', setDurations);
 			audio.removeEventListener('timeupdate', updateCurrent);
@@ -70,49 +67,47 @@ export default function App() {
 						<span className="sr-only">A</span>
 					</button>
 				</header>
-				<>
-					<List
-						values={tracks}
-						onChange={({ oldIndex, newIndex }) => {
-							const shifted = arrayMove(tracks, oldIndex, newIndex);
-							const index = shifted.findIndex(trx => Object.is(trx, playing.file));
-							nowPlaying(nP => ({ ...nP, index }));
-							setTracks(shifted);
-						}}
-						renderList={({ children, props }) => (<ul {...props} className="songs">{children}</ul>)}
-						renderItem={({ value, props, index }) => (
-							<li {...props} className="song">
-								<button data-movable-handle className="button button-sm">
-									<i className="fas fa-search" aria-hidden></i>
-									<span className="sr-only">M</span>
-								</button>
-								<p onClick={() => setCurrentTrack(value, index)}>{value.name}</p>
-								{
-									Object.is(playing.file, value) ? (
-										<button className="button button-sm" onClick={() => setCurrentTrack(null)}>
-											<i className="fas fa-search" aria-hidden></i>
-											<span className="sr-only">S</span>
-										</button>
-									) : (
-										<button className="button button-sm" onClick={() => setTracks(arrayRemove(tracks, index))}>
-											<i className="fas fa-search" aria-hidden></i>
-											<span className="sr-only">D</span>
-										</button>
-									)
-								}
-							</li>
-						)}
-					/>
-				</>
+
+				<List
+					values={tracks}
+					onChange={({ oldIndex, newIndex }) => {
+						const shifted = arrayMove(tracks, oldIndex, newIndex);
+						const index = shifted.findIndex(trx => Object.is(trx, playing.file));
+						nowPlaying(nP => ({ ...nP, index }));
+						setTracks(shifted);
+					}}
+					renderList={({ children, props }) => (<ul {...props} className="songs">{children}</ul>)}
+					renderItem={({ value, props, index }) => (
+						<li {...props} className="song">
+							<button data-movable-handle className="button button-sm">
+								<i className="fas fa-search" aria-hidden></i>
+								<span className="sr-only">M</span>
+							</button>
+							<p onClick={() => setCurrentTrack(value, index)}>{value.name}</p>
+							{
+								Object.is(playing.file, value) ? (
+									<button className="button button-sm" onClick={() => setCurrentTrack(null)}>
+										<i className="fas fa-search" aria-hidden></i>
+										<span className="sr-only">S</span>
+									</button>
+								) : (
+									<button className="button button-sm" onClick={() => setTracks(arrayRemove(tracks, index))}>
+										<i className="fas fa-search" aria-hidden></i>
+										<span className="sr-only">D</span>
+									</button>
+								)
+							}
+						</li>
+					)}
+				/>
+
 				<aside className="prog">
 					<div className="prog-time">
-						{/* convert current to good format */}
-						<span className="left">{parseInt(playing.current/60, 10)}:{parseInt(playing.current%60)}</span>
-						<span className="right">{parseInt(playing.duration/60, 10)}:{parseInt(playing.duration%60)}</span>
-						{/* convert duration to good format */}
+						<span className="left">{parseInt(playing.current / 60, 10)}:{parseInt(playing.current % 60)}</span>
+						<span className="right">{parseInt(playing.duration / 60, 10)}:{parseInt(playing.duration % 60)}</span>
 					</div>
 					<div className="prog-bar">
-						<div className="prog-bar-inner" style={{ width: `${100 * (playing.current / playing.duration)}%`}}></div>
+						<div className="prog-bar-inner" style={{ width: `${100 * (playing.current / playing.duration)}%` }}></div>
 					</div>
 				</aside>
 
