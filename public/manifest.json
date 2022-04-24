@@ -8,7 +8,7 @@
       "type": "image/png"
     }
   ],
-  "start_url": ".",
-	"scope": "/",
+  "start_url": "https://devnullsans.github.io/audio-player/",
+	"scope": "https://devnullsans.github.io/audio-player/",
   "display": "standalone"
 }
