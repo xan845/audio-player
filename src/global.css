@@ -22,6 +22,18 @@ button {
 	all: unset;
 }
 
+input {
+	display: none;
+}
+
+p {
+	flex: 1 1 100%;
+	margin-right: 0.8rem;
+	padding-bottom: 0.8rem;
+	white-space: nowrap;
+	overflow-x: auto;
+}
+
 .player {
 	width: 100%;
 	max-width: 360px;
@@ -36,7 +48,9 @@ button {
 
 .header {
 	height: 3rem;
-	text-align: center;
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
 }
 
 .songs {
@@ -59,15 +73,7 @@ button {
 	border-radius: 10px;
 }
 
-.song > p {
-	flex: 1 1 100%;
-	margin-right: 0.8rem;
-	padding-bottom: 0.8rem;
-	white-space: nowrap;
-	overflow-x: auto;
-}
-
-.song > button {
+.song>button {
 	flex: 1 1 12%;
 	margin-right: 0.8rem;
 }
@@ -84,7 +90,7 @@ button {
 	justify-content: space-between;
 }
 
-.prog-time > p {
+.prog-time>span {
 	font-size: 0.95rem;
 }
 
@@ -132,7 +138,7 @@ button {
 	width: 3.25rem;
 	height: 3.25rem;
 }
-
+/* 
 .prog-bar-inner {
 	animation: timer 30s linear 0.1s infinite;
 }
@@ -145,4 +151,4 @@ button {
 	100% {
 		width: 100%;
 	}
-}
+} */
