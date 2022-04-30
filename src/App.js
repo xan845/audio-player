@@ -10,9 +10,9 @@ export default function App() {
 	const [shuffle, setShuffle] = useState(false);
 	const [tracks, setTracks] = useState([]);
 	const [track, setTrack] = useState(null);
-	const [index, setIndex] = useState(0);
 	const [duration, setDuration] = useState(0);
 	const [current, setCurrent] = useState(0);
+	const [index, setIndex] = useState(0);
 
 	const playNext = () => {
 		const ix = shuffle ? Math.random() * tracks.length | 0 : index + 1;
