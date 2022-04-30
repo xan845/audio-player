@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { arrayMove, arrayRemove, List } from "react-movable";
 
 const audio = new Audio();
-audio.playbackRate = 4;
+
 export default function App() {
 
 	const files = useRef();
@@ -40,7 +40,7 @@ export default function App() {
 		audio.src = file ? URL.createObjectURL(file) : null;
 	};
 
-	const setTimestamps = () => { setDuration(audio.duration); setCurrent(audio.currentTime); audio.playbackRate = 4; audio.play(); };
+	const setTimestamps = () => { setDuration(audio.duration); setCurrent(audio.currentTime); audio.play(); };
 
 	const updateTimestamps = () => { setDuration(isNaN(audio.duration) ? 0 : audio.duration); setCurrent(audio.currentTime); };
 
