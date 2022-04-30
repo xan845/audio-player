@@ -16,21 +16,16 @@ export default function App() {
 
 	const playNext = () => {
 		const ix = shuffle ? Math.random() * tracks.length | 0 : index + 1;
-		console.log(ix, tracks);
 		const track = tracks[ix] ?? tracks[0];
 		if (!track) setCurrentTrack(null);
 		else setCurrentTrack(track, tracks.indexOf(track));
-		console.log(track, tracks.indexOf(track));
 	};
-
 
 	const playPrev = () => {
 		const ix = shuffle ? Math.random() * tracks.length | 0 : index - 1;
-		console.log(tracks);
 		const track = tracks[ix] ?? tracks[tracks.length - 1];
 		if (!track) setCurrentTrack(null);
 		else setCurrentTrack(track, tracks.indexOf(track));
-		console.log(ix, track, tracks.indexOf(track));
 	};
 
 	const setCurrentTrack = (file, index = 0) => {
@@ -50,7 +45,6 @@ export default function App() {
 		audio.addEventListener('ended', trackEnded);
 		return () => audio.removeEventListener('ended', trackEnded);
 	}, [shuffle, index, tracks]);
-	
 
 	useEffect(() => {
 		audio.addEventListener('canplaythrough', setTimestamps);
