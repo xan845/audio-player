@@ -1,38 +1,48 @@
 import { useEffect, useRef, useState } from "react";
 import { arrayMove, arrayRemove, List } from "react-movable";
 
-const audio = new Audio();
-
-export default function App() {
+export default function App({ audio, idb }) {
 
 	const files = useRef();
 
 	const [shuffle, setShuffle] = useState(false);
 	const [tracks, setTracks] = useState([]);
-	const [track, setTrack] = useState(null);
+	const [track, setTrack] = useState('');
 	const [duration, setDuration] = useState(0);
 	const [current, setCurrent] = useState(0);
 	const [index, setIndex] = useState(0);
+	const [message, setMessage] = useState('Click track name to play');
 
 	const playNext = () => {
 		const ix = shuffle ? Math.random() * tracks.length | 0 : index + 1;
 		const track = tracks[ix] ?? tracks[0];
-		if (!track) setCurrentTrack(null);
+		if (!track) setCurrentTrack();
 		else setCurrentTrack(track, tracks.indexOf(track));
 	};
 
 	const playPrev = () => {
 		const ix = shuffle ? Math.random() * tracks.length | 0 : index - 1;
 		const track = tracks[ix] ?? tracks[tracks.length - 1];
-		if (!track) setCurrentTrack(null);
+		if (!track) setCurrentTrack();
 		else setCurrentTrack(track, tracks.indexOf(track));
 	};
 
-	const setCurrentTrack = (file, index = 0) => {
-		setTrack(file);
-		setIndex(index);
-		URL.revokeObjectURL(audio.src);
-		audio.src = file ? URL.createObjectURL(file) : null;
+	const setCurrentTrack = (val = '', ind = 0) => {
+		try {
+			URL.revokeObjectURL(audio.src);
+			setIndex(ind);
+			setTrack(val);
+			setMessage(val ?? 'Click track name to play');
+			idb.transaction('Tracks').objectStore('Tracks').get(val).onsuccess = e => {
+				if (e.target.result)
+					audio.src = URL.createObjectURL(e.target.result);
+				else
+					audio.src = '';
+			};
+		} catch (err) {
+			// console.log(err);
+			setMessage(err.message);
+		}
 	};
 
 	const setTimestamps = () => { setDuration(audio.duration); setCurrent(audio.currentTime); audio.play(); };
@@ -50,18 +60,53 @@ export default function App() {
 		audio.addEventListener('canplaythrough', setTimestamps);
 		audio.addEventListener('timeupdate', updateTimestamps);
 		audio.addEventListener('error', updateTimestamps);
+		try {
+			const req = idb.transaction('Tracks').objectStore('Tracks').getAllKeys();
+			req.onsuccess = ev => setTracks(ev.target.result);
+		} catch (error) {
+			// console.log(error);
+			setMessage(error.message);
+		}
 		return () => {
 			audio.removeEventListener('canplaythrough', setTimestamps);
 			audio.removeEventListener('timeupdate', updateTimestamps);
 			audio.removeEventListener('error', updateTimestamps);
+			idb.close();
 		};
 	}, []);
+
+	const addTracks = fls => {
+		try {
+			const names = [];
+			const txn = idb.transaction('Tracks', 'readwrite');
+			const store = txn.objectStore('Tracks');
+			txn.oncomplete = () => setTracks(trx => [...trx, ...names]);
+			for (const f of fls) {
+				const req = store.add(f);
+				req.onsuccess = () => names.push(f.name);
+			}
+		} catch (err) {
+			// console.log(err);
+			setMessage(err.message);
+		}
+	};
+
+	const deleteTracks = (val, ind) => {
+		try {
+			const txn = idb.transaction('Tracks', 'readwrite');
+			txn.objectStore('Tracks').delete(val);
+			txn.oncomplete = () => setTracks(trx => arrayRemove(trx, ind));
+		} catch (err) {
+			// console.log(err);
+			setMessage(err.message);
+		}
+	};
 
 	return (
 		<main className="player">
 
 			<header className="header">
-				<p>{track?.name ?? "Click track name to play"}</p>
+				<p>{message}</p>
 				<button className="button button-sm" onClick={() => files.current.click()}>
 					<i className="fas fa-search" aria-hidden></i>
 					<span className="sr-only">A</span>
@@ -83,19 +128,19 @@ export default function App() {
 							<i className="fas fa-search" aria-hidden></i>
 							<span className="sr-only">M</span>
 						</button>
-						<p onClick={() => setCurrentTrack(value, index)}>{value.name}</p>
+						<p onClick={() => setCurrentTrack(value, index)}>{value}</p>
 						{
-							Object.is(track, value) ? (
-								<button className="button button-sm" onClick={() => setCurrentTrack(null)}>
+							value === track ? (
+								<button className="button button-sm" onClick={() => setCurrentTrack()}>
 									<i className="fas fa-search" aria-hidden></i>
 									<span className="sr-only">S</span>
 								</button>
 							) : (
-								<button className="button button-sm" onClick={() => setTracks(arrayRemove(tracks, index))}>
+								<button className="button button-sm" onClick={() => deleteTracks(value, index)}>
 									<i className="fas fa-search" aria-hidden></i>
 									<span className="sr-only">D</span>
 								</button>
-							)
+							)// ^ this buttons onclick has to do some idb shit
 						}
 					</li>
 				)}
@@ -134,7 +179,7 @@ export default function App() {
 				</button>
 			</footer>
 
-			<input ref={files} onChange={e => setTracks(trx => [...trx, ...e.target.files])} type="file" accept="audio/*" multiple />
+			<input ref={files} onChange={e => addTracks(e.target.files)} type="file" accept="audio/*" multiple />
 		</main>
 	);
 };
