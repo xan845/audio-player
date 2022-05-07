@@ -5,6 +5,7 @@ export default function App({ audio, idb }) {
 
 	const files = useRef();
 
+	const [iID, setIID] = useState(0);
 	const [shuffle, setShuffle] = useState(false);
 	const [tracks, setTracks] = useState([]);
 	const [track, setTrack] = useState('');
@@ -15,21 +16,22 @@ export default function App({ audio, idb }) {
 
 	const playNext = () => {
 		const ix = shuffle ? Math.random() * tracks.length | 0 : index + 1;
-		const track = tracks[ix] ?? tracks[0];
-		if (!track) setCurrentTrack();
-		else setCurrentTrack(track, tracks.indexOf(track));
+		const trx = tracks[ix] ?? tracks[0];
+		if (!trx) setCurrentTrack();
+		else setCurrentTrack(trx, tracks.indexOf(trx));
 	};
 
 	const playPrev = () => {
 		const ix = shuffle ? Math.random() * tracks.length | 0 : index - 1;
-		const track = tracks[ix] ?? tracks[tracks.length - 1];
-		if (!track) setCurrentTrack();
-		else setCurrentTrack(track, tracks.indexOf(track));
+		const trx = tracks[ix] ?? tracks[tracks.length - 1];
+		if (!trx) setCurrentTrack();
+		else setCurrentTrack(trx, tracks.indexOf(trx));
 	};
 
 	const setCurrentTrack = (val = '', ind = 0) => {
 		try {
 			URL.revokeObjectURL(audio.src);
+			clearInterval(iID);
 			setIndex(ind);
 			setTrack(val);
 			setMessage(val ?? 'Click track name to play');
@@ -45,11 +47,21 @@ export default function App({ audio, idb }) {
 		}
 	};
 
-	const setTimestamps = () => { setDuration(audio.duration); setCurrent(audio.currentTime); audio.play(); };
+	const setTimestamps = () => {
+		setDuration(audio.duration);
+		setCurrent(audio.currentTime);
+		audio.play().then(() => setIID(setInterval(() => updateTimestamps(), 5e2)));
+	};
 
-	const updateTimestamps = () => { setDuration(isNaN(audio.duration) ? 0 : audio.duration); setCurrent(audio.currentTime); };
+	const updateTimestamps = () => {
+		setDuration(isNaN(audio.duration) ? 0 : audio.duration);
+		setCurrent(audio.currentTime);
+	};
 
-	const trackEnded = () => !audio.loop && playNext();
+	const trackEnded = () => {
+		clearInterval(iID);
+		!audio.loop && playNext();
+	};
 
 	useEffect(() => {
 		audio.addEventListener('ended', trackEnded);
@@ -57,9 +69,6 @@ export default function App({ audio, idb }) {
 	}, [shuffle, index, tracks]);
 
 	useEffect(() => {
-		audio.addEventListener('canplaythrough', setTimestamps);
-		audio.addEventListener('timeupdate', updateTimestamps);
-		audio.addEventListener('error', updateTimestamps);
 		try {
 			const req = idb.transaction('Tracks').objectStore('Tracks').getAllKeys();
 			req.onsuccess = ev => setTracks(ev.target.result);
@@ -67,9 +76,11 @@ export default function App({ audio, idb }) {
 			// console.log(error);
 			setMessage(error.message);
 		}
+		audio.addEventListener('canplaythrough', setTimestamps);
+		audio.addEventListener('error', updateTimestamps);
 		return () => {
+			clearInterval(iID);
 			audio.removeEventListener('canplaythrough', setTimestamps);
-			audio.removeEventListener('timeupdate', updateTimestamps);
 			audio.removeEventListener('error', updateTimestamps);
 			idb.close();
 		};
@@ -140,7 +151,7 @@ export default function App({ audio, idb }) {
 									<i className="fas fa-search" aria-hidden></i>
 									<span className="sr-only">D</span>
 								</button>
-							)// ^ this buttons onclick has to do some idb shit
+							)
 						}
 					</li>
 				)}
@@ -159,23 +170,24 @@ export default function App({ audio, idb }) {
 			<footer className="buttons">
 				<button className="button button-sm" onClick={() => setShuffle(s => !s)}>
 					<i className="fas fa-random fa-sm" aria-hidden></i>
-					<span className="sr-only">S</span>
+					<span className="sr-only">{shuffle ? 'S' : 's'}</span>
 				</button>
 				<button className="button button-md" onClick={() => playPrev()}>
 					<i className="fas fa-step-backward" aria-hidden></i>
-					<span className="sr-only">P</span>
+					<span className="sr-only">&lt;&lt;</span>
 				</button>
 				<button className="button button-lg" onClick={() => audio.paused && audio.src ? audio.play() : audio.pause()}>
 					<i className="fas fa-pause fa-lg" aria-hidden></i>
-					<span className="sr-only">P</span>
+					<span className="sr-only">{audio.paused ? 'p' : 'P'}</span>
+					{/* !player.ended && 0 < player.currentTime */}
 				</button>
 				<button className="button button-md" onClick={() => playNext()}>
 					<i className="fas fa-step-forward"></i>
-					<span className="sr-only">N</span>
+					<span className="sr-only">&gt;&gt;</span>
 				</button>
 				<button className="button button-sm" onClick={() => audio.loop = !audio.loop}>
 					<i className="fas fa-circle-notch fa-sm" aria-hidden></i>
-					<span className="sr-only">L</span>
+					<span className="sr-only">{audio.loop ? 'L' : 'l'}</span>
 				</button>
 			</footer>
 
